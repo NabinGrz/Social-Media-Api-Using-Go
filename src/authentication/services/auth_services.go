@@ -18,6 +18,15 @@ import (
 
 var jwtkey = []byte("N8Sns89nS2ISB09sn290bSkSHJJ2SNoiS09")
 
+func IsValid(user userModel.User) error {
+	if user.Email == "" || user.Password == "" || user.FullName == "" || user.Username == "" {
+
+		return errors.New("email/password/username/fullname field is required")
+	} else {
+		return nil
+	}
+}
+
 // isValidEmail checks if the email provided is a valid email format
 func isValidEmail(email string) bool {
 	// Define the regex pattern for a valid email address
@@ -69,8 +78,9 @@ func VerifyPassword(password, hash string) bool {
 func Register(user userModel.User) (*mongo.InsertOneResult, error) {
 	var foundUser userModel.User
 
-	if user.Email == "" || user.Password == "" {
-		return nil, errors.New("email/password field is required")
+	emptyError := IsValid(user)
+	if emptyError != nil {
+		return nil, emptyError
 	}
 	isValid := isValidEmail(user.Email)
 	if !isValid {
@@ -79,10 +89,7 @@ func Register(user userModel.User) (*mongo.InsertOneResult, error) {
 
 	filter := bson.M{"email": user.Email}
 	result := dbConnection.SocialMediaCollection.FindOne(context.Background(), filter)
-
-	if err := result.Decode(&foundUser); err != nil {
-		return nil, err
-	}
+	result.Decode(&foundUser)
 
 	if foundUser.Email != "" {
 		return nil, errors.New("Email has alread been registered")

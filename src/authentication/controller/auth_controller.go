@@ -38,8 +38,9 @@ func Register(ctx *gin.Context) {
 	var user userModel.User
 
 	if err := ctx.ShouldBindJSON(&user); err != nil {
-		if user.Email == "" || user.Password == "" {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": "email/password field is required"})
+		emptyError := authServices.IsValid(user)
+		if emptyError != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": emptyError})
 			return
 		} else {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
