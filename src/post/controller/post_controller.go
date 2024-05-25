@@ -208,6 +208,7 @@ func CommentPost(c *gin.Context) {
 		return
 	}
 	comment.User = userID
+	comment.Date = time.Now()
 
 	update := bson.M{"$push": bson.M{
 		"comments": comment,

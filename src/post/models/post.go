@@ -28,5 +28,6 @@ type MediaDetail struct {
 type CommentDetail struct {
 	ID      primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	Comment string             `json:"comment,omitempty" bson:"comment,omitempty"`
+	Date    time.Time          `json:"date,omitempty" bson:"date,omitempty"`
 	User    primitive.ObjectID `json:"user,omitempty" bson:"user,omitempty"`
 }
