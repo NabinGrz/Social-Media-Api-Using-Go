@@ -14,8 +14,13 @@ func Login(ctx *gin.Context) {
 	var user userModel.User
 
 	if err := ctx.ShouldBindJSON(&user); err != nil {
-		ctx.JSON(http.StatusBadRequest, err.Error())
-		return
+		if user.Email == "" || user.Password == "" {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "email/password field is required"})
+			return
+		} else {
+			ctx.JSON(http.StatusBadRequest, err.Error())
+			return
+		}
 	}
 
 	token, error := authServices.Login(user.Email, user.Password)
@@ -33,9 +38,15 @@ func Register(ctx *gin.Context) {
 	var user userModel.User
 
 	if err := ctx.ShouldBindJSON(&user); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+		if user.Email == "" || user.Password == "" {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "email/password field is required"})
+			return
+		} else {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 	}
+
 	_, err := authServices.Register(user)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

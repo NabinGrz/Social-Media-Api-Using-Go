@@ -68,6 +68,10 @@ func VerifyPassword(password, hash string) bool {
 
 func Register(user userModel.User) (*mongo.InsertOneResult, error) {
 	var foundUser userModel.User
+
+	if user.Email == "" || user.Password == "" {
+		return nil, errors.New("email/password field is required")
+	}
 	isValid := isValidEmail(user.Email)
 	if !isValid {
 		return nil, errors.New("Invalid email address")
@@ -96,6 +100,10 @@ func Register(user userModel.User) (*mongo.InsertOneResult, error) {
 func Login(email string, password string) (map[string]interface{}, error) {
 	var foundUser userModel.User
 	isValid := isValidEmail(email)
+
+	if email == "" || password == "" {
+		return nil, errors.New("email/password field is required")
+	}
 	if !isValid {
 		return nil, errors.New("Invalid email address")
 	}
