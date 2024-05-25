@@ -29,6 +29,7 @@ func Router() *gin.Engine {
 		authorized.PUT("/updateProfileDetail/:id", profileController.UpdateDetails)
 		authorized.POST("/post", postController.CreatePost)
 		authorized.DELETE("/post/:id", postController.DeletePost)
+		authorized.PUT("/post/:id", postController.UpdatePost)
 	}
 
 	return router
