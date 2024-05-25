@@ -3,6 +3,7 @@ package userPostModel
 import (
 	"time"
 
+	userModel "github.com/NabinGrz/SocialMediaApi/src/authentication/models"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -13,13 +14,19 @@ type SocialMediaPost struct {
 	User     primitive.ObjectID `json:"user,omitempty" bson:"user,omitempty"`
 	Date     time.Time          `json:"date,omitempty" bson:"date,omitempty"`
 	Media    []MediaDetail      `json:"media,omitempty" bson:"media,omitempty"`
-	Likes    int                `json:"like,0" bson:"like,0"`
-	Shares   int                `json:"shares,0" bson:"shares,0"`
-	Comments int                `json:"comments,0" bson:"comments,0"`
+	LikeBy   []userModel.User   `json:"likeby,omitempty" bson:"likeby,omitempty"`
+	Comments []CommentDetail    `json:"comments,omitempty" bson:"comments,omitempty"`
+	Shares   []userModel.User   `json:"shares,omitempty" bson:"shares,omitempty"`
 }
 
 type MediaDetail struct {
 	ID       primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	PostType string             `json:"posttype,omitempty" bson:"posttype,omitempty"`
 	Url      string             `json:"url,omitempty" bson:"url,omitempty"`
+}
+
+type CommentDetail struct {
+	ID      primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	Comment string             `json:"comment,omitempty" bson:"comment,omitempty"`
+	User    primitive.ObjectID `json:"user,omitempty" bson:"user,omitempty"`
 }
