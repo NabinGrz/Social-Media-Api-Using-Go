@@ -5,11 +5,14 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	"fmt"
+	"net/http"
 	"regexp"
 	"time"
 
 	userModel "github.com/NabinGrz/SocialMediaApi/src/authentication/models"
 	"github.com/NabinGrz/SocialMediaApi/src/dbConnection"
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -48,12 +51,13 @@ func RandomHex(n int) (string, error) {
 	return hex.EncodeToString(bytes), nil
 }
 
-func GenerateJWT(user string) (string, error) {
+func GenerateJWT(user userModel.User) (string, error) {
+
 	token := jwt.NewWithClaims(
 		jwt.SigningMethodHS256,
 		jwt.MapClaims{
-			"username": user,
-			"exp":      time.Now().Add(time.Hour * 24).Unix(),
+			"userid": user.Id,
+			"exp":    time.Now().Add(time.Hour * 24).Unix(),
 		})
 
 	tokenString, err := token.SignedString(jwtkey)
@@ -88,7 +92,7 @@ func Register(user userModel.User) (*mongo.InsertOneResult, error) {
 	}
 
 	filter := bson.M{"email": user.Email}
-	result := dbConnection.SocialMediaCollection.FindOne(context.Background(), filter)
+	result := dbConnection.UserCollection.FindOne(context.Background(), filter)
 	result.Decode(&foundUser)
 
 	if foundUser.Email != "" {
@@ -100,7 +104,7 @@ func Register(user userModel.User) (*mongo.InsertOneResult, error) {
 		return nil, err
 	}
 	user.Password = hashedPassword
-	createUser, err := dbConnection.SocialMediaCollection.InsertOne(context.Background(), user)
+	createUser, err := dbConnection.UserCollection.InsertOne(context.Background(), user)
 	return createUser, err
 }
 
@@ -115,7 +119,7 @@ func Login(email string, password string) (map[string]interface{}, error) {
 		return nil, errors.New("Invalid email address")
 	}
 
-	err := dbConnection.SocialMediaCollection.FindOne(context.Background(), bson.M{"email": email}).Decode(&foundUser)
+	err := dbConnection.UserCollection.FindOne(context.Background(), bson.M{"email": email}).Decode(&foundUser)
 
 	if err != nil {
 		return nil, err
@@ -124,8 +128,45 @@ func Login(email string, password string) (map[string]interface{}, error) {
 	match := VerifyPassword(password, foundUser.Password)
 
 	if match {
-		token, _ := GenerateJWT(foundUser.Email)
+		token, _ := GenerateJWT(foundUser)
 		return map[string]interface{}{"token": token}, nil
 	}
 	return map[string]interface{}{"error": "Invalid Credentials"}, nil
+}
+
+// JWT middleware function to verify token and extract user details
+func JWTMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Extract the JWT token from the request headers
+		tokenString := c.GetHeader("Authorization")
+		tokenString = tokenString[len("Bearer "):]
+		if tokenString == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization token is missing"})
+			c.Abort()
+			return
+		}
+		token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
+			return []byte(jwtkey), nil
+		})
+
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			c.Abort()
+			return
+		}
+		fmt.Println(token)
+		if token.Valid {
+			if claims, ok := token.Claims.(jwt.MapClaims); ok {
+				userid := claims["userid"]
+				c.Set("userid", userid)
+				c.Next()
+			} else {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid tokendsdsds"})
+				c.Abort()
+			}
+		} else {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			c.Abort()
+		}
+	}
 }

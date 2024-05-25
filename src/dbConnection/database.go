@@ -11,9 +11,10 @@ import (
 
 const connectionString = "mongodb+srv://nabin:nabin@socialmedia.jicw8en.mongodb.net/?retryWrites=true&w=majority&appName=SocialMedia"
 const dbName = "SocialMedia"
-const collectionName = "user"
+const userCollectionName = "user"
+const postCollectionName = "post"
 
-var SocialMediaCollection *mongo.Collection
+var UserCollection, PostCollection *mongo.Collection
 
 func init() {
 	clientOption := options.Client().ApplyURI(connectionString)
@@ -24,7 +25,8 @@ func init() {
 		log.Fatal("🛑🛑🛑", err)
 	}
 
-	SocialMediaCollection = client.Database(dbName).Collection(collectionName)
+	UserCollection = client.Database(dbName).Collection(userCollectionName)
+	PostCollection = client.Database(dbName).Collection(postCollectionName)
 
 	fmt.Println("🟢🟢🟢 Succesfully connected to MongoDB.....")
 }

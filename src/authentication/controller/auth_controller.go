@@ -10,7 +10,7 @@ import (
 
 var tokenString string
 
-func Login(ctx *gin.Context) {
+func LoginHandler(ctx *gin.Context) {
 	var user userModel.User
 
 	if err := ctx.ShouldBindJSON(&user); err != nil {
@@ -34,7 +34,7 @@ func Login(ctx *gin.Context) {
 
 }
 
-func Register(ctx *gin.Context) {
+func RegisterHandler(ctx *gin.Context) {
 	var user userModel.User
 
 	if err := ctx.ShouldBindJSON(&user); err != nil {
@@ -56,7 +56,7 @@ func Register(ctx *gin.Context) {
 	ctx.IndentedJSON(http.StatusOK, gin.H{"message": "User registered successfully"})
 }
 
-func Authenticate(c *gin.Context) {
+func AuthenticateHandler(c *gin.Context) {
 	tokenString = c.GetHeader("Authorization")
 	if tokenString == "" {
 		c.IndentedJSON(http.StatusUnauthorized, gin.H{
