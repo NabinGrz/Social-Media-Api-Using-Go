@@ -21,7 +21,7 @@ func Login(ctx *gin.Context) {
 	token, error := authServices.Login(user.Email, user.Password)
 
 	if error != nil {
-		ctx.JSON(http.StatusBadRequest, error)
+		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"error": error.Error()})
 		return
 	}
 

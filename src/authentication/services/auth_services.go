@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	"regexp"
 	"time"
 
 	userModel "github.com/NabinGrz/SocialMediaApi/src/authentication/models"
@@ -17,6 +18,17 @@ import (
 
 var jwtkey = []byte("N8Sns89nS2ISB09sn290bSkSHJJ2SNoiS09")
 
+// isValidEmail checks if the email provided is a valid email format
+func isValidEmail(email string) bool {
+	// Define the regex pattern for a valid email address
+	const emailRegexPattern = `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
+
+	// Compile the regex pattern
+	re := regexp.MustCompile(emailRegexPattern)
+
+	// Match the email against the regex pattern
+	return re.MatchString(email)
+}
 func RandomHex(n int) (string, error) {
 	bytes := make([]byte, n)
 
@@ -56,8 +68,12 @@ func VerifyPassword(password, hash string) bool {
 
 func Register(user userModel.User) (*mongo.InsertOneResult, error) {
 	var foundUser userModel.User
-	filter := bson.M{"email": user.Email}
+	isValid := isValidEmail(user.Email)
+	if !isValid {
+		return nil, errors.New("Invalid email address")
+	}
 
+	filter := bson.M{"email": user.Email}
 	result := dbConnection.SocialMediaCollection.FindOne(context.Background(), filter)
 
 	if err := result.Decode(&foundUser); err != nil {
@@ -79,13 +95,14 @@ func Register(user userModel.User) (*mongo.InsertOneResult, error) {
 
 func Login(email string, password string) (map[string]interface{}, error) {
 	var foundUser userModel.User
+	isValid := isValidEmail(email)
+	if !isValid {
+		return nil, errors.New("Invalid email address")
+	}
 
 	err := dbConnection.SocialMediaCollection.FindOne(context.Background(), bson.M{"email": email}).Decode(&foundUser)
 
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return nil, errors.New("User not found")
-		}
 		return nil, err
 	}
 
