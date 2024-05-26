@@ -5,6 +5,7 @@ import (
 
 	authController "github.com/NabinGrz/SocialMediaApi/src/authentication/controller"
 	authServices "github.com/NabinGrz/SocialMediaApi/src/authentication/services"
+	cloudinaryController "github.com/NabinGrz/SocialMediaApi/src/cloudinary/controller"
 	postController "github.com/NabinGrz/SocialMediaApi/src/post/controller"
 	"github.com/NabinGrz/SocialMediaApi/src/profileController"
 	"github.com/gin-gonic/gin"
@@ -37,6 +38,9 @@ func Router() *gin.Engine {
 		authorized.POST("/post/like/:id", postController.LikePost)
 		authorized.POST("/post/comment/:id", postController.CommentPost)
 		authorized.POST("/post/share/:id", postController.SharePost)
+
+		//!! FILE UPLOAD
+		authorized.POST("/uploadFile", cloudinaryController.UpdatePOSTImage)
 	}
 
 	return router

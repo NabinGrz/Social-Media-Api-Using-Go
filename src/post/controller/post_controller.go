@@ -11,16 +11,18 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func GetAllPost(c *gin.Context) {
-	var allPost []postModel.SocialMediaPost
-	cursor, err := dbConnection.PostCollection.Find(context.Background(), bson.M{})
+
+	cursor, err := dbConnection.PostCollection.Aggregate(context.Background(), getAllPostPipeline())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	defer cursor.Close(c)
+	defer cursor.Close(context.Background())
+	var allPost []postModel.SocialMediaPost
 	for cursor.Next(c) {
 		var post postModel.SocialMediaPost
 
@@ -174,7 +176,7 @@ func SharePost(c *gin.Context) {
 	update := bson.M{"$addToSet": bson.M{"shares": userID}}
 	updateResult, _ := dbConnection.PostCollection.UpdateMany(context.Background(), filter, update)
 	fmt.Println(updateResult)
-	c.JSON(http.StatusOK, gin.H{"message": "Post has been liked successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "Post has been shared successfully"})
 }
 func CommentPost(c *gin.Context) {
 	userID, _ := primitive.ObjectIDFromHex(c.GetString("userid"))
@@ -209,6 +211,7 @@ func CommentPost(c *gin.Context) {
 	}
 	comment.User = userID
 	comment.Date = time.Now()
+	comment.ID = primitive.NewObjectID()
 
 	update := bson.M{"$push": bson.M{
 		"comments": comment,
@@ -216,4 +219,99 @@ func CommentPost(c *gin.Context) {
 	updateResult, _ := dbConnection.PostCollection.UpdateOne(context.Background(), filter, update)
 	fmt.Println(updateResult)
 	c.JSON(http.StatusOK, gin.H{"message": "Post has been commented successfully"})
+}
+
+func getAllPostPipeline() mongo.Pipeline {
+	pipeline := mongo.Pipeline{
+		{{ // $lookup stage
+			Key: "$lookup",
+			Value: bson.D{
+				{Key: "from", Value: "user"},
+				{Key: "localField", Value: "user"},
+				{Key: "foreignField", Value: "_id"},
+				{Key: "as", Value: "userdata"},
+			},
+		}},
+		{{ // $lookup stage
+			Key: "$lookup",
+			Value: bson.D{
+				{Key: "from", Value: "user"},
+				{Key: "localField", Value: "likeby"},
+				{Key: "foreignField", Value: "_id"},
+				{Key: "as", Value: "likeby"},
+			},
+		}},
+		{{ // $lookup stage
+			Key: "$lookup",
+			Value: bson.D{
+				{Key: "from", Value: "user"},
+				{Key: "localField", Value: "shares"},
+				{Key: "foreignField", Value: "_id"},
+				{Key: "as", Value: "shares"},
+			},
+		}},
+		{{ // $lookup stage
+			Key: "$lookup",
+			Value: bson.D{
+				{Key: "from", Value: "user"},
+				{Key: "localField", Value: "comments.user"},
+				{Key: "foreignField", Value: "_id"},
+				{Key: "as", Value: "commentUsers"},
+			},
+		}},
+		bson.D{{Key: "$unwind", Value: bson.D{
+			{Key: "path", Value: "$commentUsers"},
+			{Key: "preserveNullAndEmptyArrays", Value: true},
+		}}},
+		bson.D{{Key: "$addFields", Value: bson.D{
+			{Key: "comments", Value: bson.D{
+				{Key: "$cond", Value: bson.A{
+					// Condition to check if comments field is null
+					bson.D{
+						{Key: "$eq", Value: bson.A{"$comments", nil}},
+					},
+					// If comments is null, set it to a default comment structure
+					bson.A{bson.D{
+						{Key: "_id", Value: ""},
+						{Key: "comment", Value: ""},
+						{Key: "date", Value: ""},
+						{Key: "commentUsers", Value: bson.A{}},
+						{Key: "user", Value: ""},
+					}},
+					// If comments is not null, map each comment
+					bson.D{
+						{Key: "$map", Value: bson.D{
+							{Key: "input", Value: "$comments"},
+							{Key: "as", Value: "comment"},
+							{Key: "in", Value: bson.D{
+								{Key: "_id", Value: bson.D{
+									{Key: "$convert", Value: bson.D{
+										{Key: "input", Value: "$$comment._id"},
+										{Key: "to", Value: "objectId"},
+									}},
+								}},
+								{Key: "comment", Value: "$$comment.comment"},
+								{Key: "date", Value: bson.D{{Key: "$toDate", Value: "$$comment.date"}}}, // Convert date to Date type
+								{Key: "commentUsers", Value: "$commentUsers"},
+								{Key: "user", Value: bson.D{{Key: "$toObjectId", Value: "$$comment._id"}}},
+							}},
+						}},
+					},
+				}},
+			}},
+		}}},
+
+		bson.D{{Key: "$project", Value: bson.D{
+			{Key: "_id", Value: 1},
+			{Key: "caption", Value: 1},
+			{Key: "user", Value: 1},
+			{Key: "date", Value: bson.D{{Key: "$toDate", Value: "$date"}}},
+			{Key: "media", Value: 1},
+			{Key: "likeby", Value: 1},
+			{Key: "shares", Value: 1},
+			{Key: "comments", Value: 1},
+			{Key: "userdata", Value: 1},
+		}}},
+	}
+	return pipeline
 }

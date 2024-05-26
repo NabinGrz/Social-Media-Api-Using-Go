@@ -15,8 +15,9 @@ type SocialMediaPost struct {
 	Date     time.Time          `json:"date,omitempty" bson:"date,omitempty"`
 	Media    []MediaDetail      `json:"media,omitempty" bson:"media,omitempty"`
 	LikeBy   []userModel.User   `json:"likeby,omitempty" bson:"likeby,omitempty"`
-	Comments []CommentDetail    `json:"comments,omitempty" bson:"comments,omitempty"`
 	Shares   []userModel.User   `json:"shares,omitempty" bson:"shares,omitempty"`
+	Comments []CommentDetail    `json:"comments,omitempty" bson:"comments,omitempty"`
+	UserData []userModel.User   `json:"userdata,omitempty" bson:"userdata,omitempty"`
 }
 
 type MediaDetail struct {
@@ -26,8 +27,9 @@ type MediaDetail struct {
 }
 
 type CommentDetail struct {
-	ID      primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	Comment string             `json:"comment,omitempty" bson:"comment,omitempty"`
-	Date    time.Time          `json:"date,omitempty" bson:"date,omitempty"`
-	User    primitive.ObjectID `json:"user,omitempty" bson:"user,omitempty"`
+	ID           primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	Comment      string             `json:"comment,omitempty" bson:"comment,omitempty"`
+	Date         time.Time          `json:"date,omitempty" bson:"date,omitempty"`
+	User         primitive.ObjectID `json:"user,omitempty" bson:"user,omitempty"`
+	CommentUsers userModel.User     `json:"commentUsers,omitempty" bson:"commentUsers,omitempty"`
 }
