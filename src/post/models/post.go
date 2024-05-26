@@ -19,17 +19,15 @@ type SocialMediaPost struct {
 	Comments []CommentDetail    `json:"comments,omitempty" bson:"comments,omitempty"`
 	UserData []userModel.User   `json:"userdata,omitempty" bson:"userdata,omitempty"`
 }
-
-type MediaDetail struct {
-	ID       primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	PostType string             `json:"posttype,omitempty" bson:"posttype,omitempty"`
-	Url      string             `json:"url,omitempty" bson:"url,omitempty"`
-}
-
 type CommentDetail struct {
 	ID           primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	Comment      string             `json:"comment,omitempty" bson:"comment,omitempty"`
 	Date         time.Time          `json:"date,omitempty" bson:"date,omitempty"`
 	User         primitive.ObjectID `json:"user,omitempty" bson:"user,omitempty"`
 	CommentUsers userModel.User     `json:"commentUsers,omitempty" bson:"commentUsers,omitempty"`
+}
+type MediaDetail struct {
+	ID       primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	PostType string             `json:"posttype,omitempty" bson:"posttype,omitempty"`
+	Url      string             `json:"url,omitempty" bson:"url,omitempty"`
 }

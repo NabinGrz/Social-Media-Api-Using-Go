@@ -250,15 +250,15 @@ func getAllPostPipeline() mongo.Pipeline {
 				{Key: "as", Value: "shares"},
 			},
 		}},
-		{{ // $lookup stage
-			Key: "$lookup",
-			Value: bson.D{
-				{Key: "from", Value: "user"},
-				{Key: "localField", Value: "comments.user"},
-				{Key: "foreignField", Value: "_id"},
-				{Key: "as", Value: "commentUsers"},
-			},
-		}},
+		// {{ // $lookup stage
+		// 	Key: "$lookup",
+		// 	Value: bson.D{
+		// 		{Key: "from", Value: "user"},
+		// 		{Key: "localField", Value: "comments.user"},
+		// 		{Key: "foreignField", Value: "_id"},
+		// 		{Key: "as", Value: "commentUsers"},
+		// 	},
+		// }},
 		bson.D{{Key: "$unwind", Value: bson.D{
 			{Key: "path", Value: "$commentUsers"},
 			{Key: "preserveNullAndEmptyArrays", Value: true},
@@ -292,8 +292,8 @@ func getAllPostPipeline() mongo.Pipeline {
 								}},
 								{Key: "comment", Value: "$$comment.comment"},
 								{Key: "date", Value: bson.D{{Key: "$toDate", Value: "$$comment.date"}}}, // Convert date to Date type
-								{Key: "commentUsers", Value: "$commentUsers"},
-								{Key: "user", Value: bson.D{{Key: "$toObjectId", Value: "$$comment._id"}}},
+								{Key: "commentUsers", Value: "$$comment.commentUsers"},
+								{Key: "user", Value: bson.D{{Key: "$toObjectId", Value: "$$comment.user"}}},
 							}},
 						}},
 					},
