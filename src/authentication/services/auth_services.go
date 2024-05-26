@@ -131,7 +131,7 @@ func Login(email string, password string) (map[string]interface{}, error) {
 		token, _ := GenerateJWT(foundUser)
 		return map[string]interface{}{"token": token}, nil
 	}
-	return map[string]interface{}{"error": "Invalid Credentials"}, nil
+	return nil, errors.New("Invalid Credentials")
 }
 
 // JWT middleware function to verify token and extract user details
